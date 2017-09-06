@@ -8,7 +8,7 @@ def process_gridworld_data(input, imsize):
     # state_data: concatenated one-hot vectors for each state variable
     # state_xy_data: state variable (x,y position)
     # label_data: one-hot vector for action (state difference)
-    im_size=[imsize, imsize]
+    im_size = [imsize, imsize]
     matlab_data = sio.loadmat(input)
     im_data = matlab_data["batch_im_data"]
     im_data = (im_data - 1)/255  # obstacles = 1, free zone = 0
@@ -23,7 +23,7 @@ def process_gridworld_data(input, imsize):
     Xval_data = Xval_data.reshape(-1, 1, im_size[0], im_size[1])
     Xdata = np.append(Xim_data, Xval_data, axis=1)
     # Need to transpose because Theano is NCHW, while TensorFlow is NHWC
-    Xdata = np.transpose(Xdata,  (0, 2, 3, 1))
+    Xdata = np.transpose(Xdata, (0, 2, 3, 1))
     S1data = state1_data.astype('int8')
     S2data = state2_data.astype('int8')
 

@@ -25,6 +25,7 @@ class GridWorld(Env):
         self.observation_space = spaces.Box(low=EMPTY, high=GOAL, shape=self.map.shape)
         self.goal_reward = self.map_height * self.map_width
         self.character_position = None
+        self.steps = 0
 
     def _reset(self):
         self.map = np.zeros((self.map_height, self.map_width), np.float32)
@@ -34,11 +35,13 @@ class GridWorld(Env):
         self._set_goal()
         self._set_walls()
         self.character_position = self.start
+        self.steps = 0
         return self.map
 
     def _step(self, action):
+        self.steps += 1
         moves = self._possible_moves(self.character_position)
-        reward = -1
+        reward = -0.1
         done = False
         if action in moves:
             new_position = self._position_after_move(self.character_position, action)
@@ -49,8 +52,14 @@ class GridWorld(Env):
 
             self.map[new_position[0], new_position[1]] = CHARACTER
             self.character_position = new_position
+        else:
+            reward = -1.0
 
-        return self.map, reward, done, {}
+        if self.steps >= 200:
+            reward = -50.0
+            done = True
+
+        return self.map.copy(), reward, done, {}
 
     def _render(self, mode='human', close=False):
         if close:

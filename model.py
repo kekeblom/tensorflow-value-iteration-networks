@@ -16,7 +16,7 @@ def VI_Block(X, S1, S2, config):
     w     = tf.Variable(np.random.randn(3, 3, 1, ch_q)    * 0.01, dtype=tf.float32)
     # feedback weights from v layer into q layer (~transition probabilities in Bellman equation)
     w_fb  = tf.Variable(np.random.randn(3, 3, 1, ch_q)    * 0.01, dtype=tf.float32)
-    w_o   = tf.Variable(np.random.randn(ch_q, 8)          * 0.01, dtype=tf.float32)
+    w_o   = tf.Variable(np.random.randn(ch_q, ch_q)          * 0.01, dtype=tf.float32)
 
     # initial conv layer over image+reward prior
     h = conv2d_flipkernel(X, w0, name="h0") + bias
@@ -25,7 +25,7 @@ def VI_Block(X, S1, S2, config):
     q = conv2d_flipkernel(r, w, name="q")
     v = tf.reduce_max(q, axis=3, keep_dims=True, name="v")
 
-    for i in range(0, k-1):
+    for _ in range(k-1):
         rv = tf.concat([r, v], 3)
         wwfb = tf.concat([w, w_fb], 2)
         q = conv2d_flipkernel(rv, wwfb, name="q")
