@@ -12,11 +12,13 @@ RIGHT = 3
 
 EMPTY = 0
 WALL = 1
-CHARACTER = 2
+CHARACTER = -1
 GOAL = 3
 
 class GridWorld(Env):
-    def __init__(self, map_height=8, map_width=8):
+    metadata = {'render.modes': ['human', 'ansi']}
+
+    def __init__(self, map_height=4, map_width=4):
         super(GridWorld, self).__init__()
         self.map_height = map_height
         self.map_width = map_width
@@ -41,7 +43,7 @@ class GridWorld(Env):
     def _step(self, action):
         self.steps += 1
         moves = self._possible_moves(self.character_position)
-        reward = -0.1
+        reward = -1.0
         done = False
         if action in moves:
             new_position = self._position_after_move(self.character_position, action)
@@ -53,7 +55,7 @@ class GridWorld(Env):
             self.map[new_position[0], new_position[1]] = CHARACTER
             self.character_position = new_position
         else:
-            reward = -1.0
+            reward = -0.1
 
         if self.steps >= 200:
             reward = -50.0
@@ -76,6 +78,7 @@ class GridWorld(Env):
                 else:
                     outfile.write('C')
             outfile.write('\n')
+        outfile.write('\n')
         if mode != 'human':
             return outfile
 
@@ -87,13 +90,15 @@ class GridWorld(Env):
         self.start = (row, column)
 
     def _set_goal(self):
-        while True:
+        done = False
+        while not done:
             row = np.random.randint(0, self.map.shape[0])
             column = np.random.randint(0, self.map.shape[1])
             if self.map[row][column] != CHARACTER:
                 self.map[row][column] = GOAL
                 self.goal = (row, column)
-                break
+                done = True
+
 
     def _set_walls(self):
         wall_blocks = int(self.map.shape[0] * self.map.shape[1] * WALL_FRACTION)
@@ -107,16 +112,15 @@ class GridWorld(Env):
                 self.map[random_position[0], random_position[1]] = WALL
                 set_blocks += 1
             i += 1
-            if i > (self.map.shape[0] * self.map.shape[1] * 2):
+            if i > (self.map.shape[0] * self.map.shape[1]):
                 break
 
     def _empty(self, position):
-        return self.map[position[0], position[1]] == EMPTY
+        return self.map[position] == EMPTY
 
     def _find_path_to_goal(self):
         path = []
         current_position = self.start
-        previous_move = None
         random_walk_length = np.random.randint(self.map_height + self.map_width, self.map_height * self.map_width)
         for _ in range(random_walk_length):
             path.append(current_position)
@@ -129,12 +133,12 @@ class GridWorld(Env):
         path = []
         diff_y = position[0] - goal[0]
         diff_x = position[1] - goal[1]
-        while diff_y != 0 and diff_x != 0:
+        while diff_y != 0 or diff_x != 0:
             if diff_y > 0:
                 position = (position[0] - 1, position[1])
                 diff_y -= 1
                 path.append(position)
-            if diff_y < 0:
+            elif diff_y < 0:
                 position = (position[0] + 1, position[1])
                 diff_y += 1
                 path.append(position)
@@ -142,10 +146,11 @@ class GridWorld(Env):
                 position = (position[0], position[1] - 1)
                 diff_x -= 1
                 path.append(position)
-            if diff_x < 0:
+            elif diff_x < 0:
                 position = (position[0], position[1] + 1)
                 diff_x += 1
                 path.append(position)
+        assert(position == goal)
         return path
 
     def _position_after_move(self, index, move):
@@ -209,9 +214,10 @@ if __name__ == '__main__':
     env = GridWorld()
     obs = env.reset()
     done = False
+    import sys
     for i in range(100):
-        obs, reward, done, _ = env.step(env.action_space.sample())
-        print(obs)
+        env.render()
+        env.reset()
 
 
 

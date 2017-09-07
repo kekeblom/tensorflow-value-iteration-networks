@@ -7,6 +7,7 @@ import numpy as np
 class EnvTestCase(TestCase):
     def setUp(self):
         self.env = GridWorld()
+        self.env.reset()
 
     def test_not_at_goal(self):
         self.assertNotEqual(self.env.character_position, self.env.goal)
